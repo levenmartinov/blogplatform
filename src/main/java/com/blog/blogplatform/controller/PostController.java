@@ -1,11 +1,14 @@
 package com.blog.blogplatform.controller;
 
+import com.blog.blogplatform.dto.PostDto;
 import com.blog.blogplatform.model.Post;
 import com.blog.blogplatform.service.PostService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/posts")
@@ -18,32 +21,36 @@ public class PostController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Post>> getAllPosts() {
-        List<Post> posts = postService.getAllPosts();
-        return ResponseEntity.ok(posts);
+    public ResponseEntity<List<PostDto>> getAllPosts() {
+        List<PostDto> postDtos = postService.getAllPosts()
+                .stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(postDtos);
     }
 
     @PostMapping
-    public ResponseEntity<Post> createPost(@RequestBody Post post) {
+    public ResponseEntity<PostDto> createPost(@Valid @RequestBody PostDto postDto) {
+        Post post = convertToEntity(postDto);
         Post savedPost = postService.createPost(post);
-        return ResponseEntity.ok(savedPost);
+        return ResponseEntity.ok(convertToDto(savedPost));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Post> getPostById(@PathVariable Long id) {
+    public ResponseEntity<PostDto> getPostById(@PathVariable Long id) {
         return postService.getPostById(id)
-                .map(ResponseEntity::ok)
+                .map(post -> ResponseEntity.ok(convertToDto(post)))
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Post> updatePost(@PathVariable Long id, @RequestBody Post updatedPost) {
+    public ResponseEntity<PostDto> updatePost(@PathVariable Long id, @Valid @RequestBody PostDto postDto) {
         return postService.getPostById(id)
                 .map(existingPost -> {
-                    existingPost.setTitle(updatedPost.getTitle());
-                    existingPost.setContent(updatedPost.getContent());
+                    existingPost.setTitle(postDto.getTitle());
+                    existingPost.setContent(postDto.getContent());
                     Post savedPost = postService.createPost(existingPost);
-                    return ResponseEntity.ok(savedPost);
+                    return ResponseEntity.ok(convertToDto(savedPost));
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -57,4 +64,23 @@ public class PostController {
             return ResponseEntity.notFound().build();
         }
     }
+
+    //Entity -> DTO
+    private PostDto convertToDto(Post post) {
+        PostDto postDto = new PostDto();
+        postDto.setId(post.getId());
+        postDto.setTitle(post.getTitle());
+        postDto.setContent(post.getContent());
+        return postDto;
+    }
+
+    //DTO -> Entity
+    private Post convertToEntity(PostDto postDto) {
+        Post post = new Post();
+        post.setTitle(postDto.getTitle());
+        post.setContent(postDto.getContent());
+        return post;
+    }
+
+
 }
