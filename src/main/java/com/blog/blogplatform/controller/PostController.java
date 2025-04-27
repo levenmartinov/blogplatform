@@ -38,32 +38,26 @@ public class PostController {
 
     @GetMapping("/{id}")
     public ResponseEntity<PostDto> getPostById(@PathVariable Long id) {
-        return postService.getPostById(id)
-                .map(post -> ResponseEntity.ok(convertToDto(post)))
-                .orElse(ResponseEntity.notFound().build());
+        Post post = postService.getPostByIdOrThrow(id);
+        return ResponseEntity.ok(convertToDto(post));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<PostDto> updatePost(@PathVariable Long id, @Valid @RequestBody PostDto postDto) {
-        return postService.getPostById(id)
-                .map(existingPost -> {
-                    existingPost.setTitle(postDto.getTitle());
-                    existingPost.setContent(postDto.getContent());
-                    Post savedPost = postService.createPost(existingPost);
-                    return ResponseEntity.ok(convertToDto(savedPost));
-                })
-                .orElse(ResponseEntity.notFound().build());
+        Post existingPost = postService.getPostByIdOrThrow(id); //We get the Post object directly
+        existingPost.setTitle(postDto.getTitle());
+        existingPost.setContent(postDto.getContent());
+        Post savedPost = postService.createPost(existingPost);
+        return ResponseEntity.ok(convertToDto(savedPost));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletePost(@PathVariable Long id) {
-        if (postService.getPostById(id).isPresent()) {
-            postService.deletePost(id);
-            return ResponseEntity.noContent().build();
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+        Post post = postService.getPostByIdOrThrow(id);
+        postService.deletePost(id);
+        return ResponseEntity.noContent().build();
     }
+
 
     //Entity -> DTO
     private PostDto convertToDto(Post post) {

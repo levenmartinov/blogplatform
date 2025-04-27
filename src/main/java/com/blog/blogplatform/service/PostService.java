@@ -1,5 +1,6 @@
 package com.blog.blogplatform.service;
 
+import com.blog.blogplatform.exception.ResourceNotFoundException;
 import com.blog.blogplatform.model.Post;
 import com.blog.blogplatform.repository.PostRepository;
 import org.springframework.stereotype.Service;
@@ -24,8 +25,9 @@ public class PostService {
         return postRepository.save(post);
     }
 
-    public Optional<Post> getPostById(Long id) {
-        return postRepository.findById(id);
+    public Post getPostByIdOrThrow(Long id) {
+        return postRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Post not found with id: " + id));
     }
 
     public void deletePost(Long id) {
