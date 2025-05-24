@@ -1,24 +1,21 @@
 package com.blog.blogplatform.model;
 
-
 import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "posts")
+@Table(name = "roles")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Post {
+public class Role {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String title;
-
-    @Column(columnDefinition = "TEXT")
-    private String content;
+    @Column(nullable = false, unique = true)
+    private String name;
 
 
 }
